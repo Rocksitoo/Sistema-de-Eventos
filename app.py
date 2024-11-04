@@ -1,5 +1,16 @@
 import streamlit as st
 from views import registro, iniciar_sesion, eventos
+import os
+
+# Configuración de Streamlit
+st.set_page_config(
+    page_title="Sistema de Eventos",
+    page_icon="🎉",
+    layout="wide"
+)
+
+# Configuración para el despliegue
+port = int(os.environ.get("PORT", 8501))
 
 # Inicializar el estado de la sesión si no existe
 if 'pagina' not in st.session_state:
@@ -19,7 +30,6 @@ with st.sidebar:
             st.session_state.pagina = valor
             st.rerun()
     
-    # Botón de cerrar sesión
     if 'usuario' in st.session_state:
         if st.button("Cerrar Sesión"):
             del st.session_state.usuario
