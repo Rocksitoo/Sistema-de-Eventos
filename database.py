@@ -1,66 +1,96 @@
 import psycopg2
 from psycopg2 import Error
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def get_connection():
     try:
-        conn = psycopg2.connect(
-            dbname="neondb",
-            user="neondb_owner",
-            password="UM8qYDASVB0s",
-            host="ep-soft-morning-a57gvomn.us-east-2.aws.neon.tech",
-            port="5432",
-            sslmode='require'
-        )
+        DATABASE_URL = "postgresql://neondb_owner:Elpd7ckHA1PM@ep-royal-wave-a51nzno1.us-east-2.aws.neon.tech/neondb?sslmode=require"
+        conn = psycopg2.connect(DATABASE_URL)
         return conn
-    except Error as e:
-        print(f"Error conectando a PostgreSQL: {e}")
+    except Exception as e:
+        print(f"Error de conexión: {str(e)}")
         return None
 
-def get_all_records(nombre, contrasena):
+def create_user(nombre, contraseña):
+    conn = None
     try:
         conn = get_connection()
+        if conn is None:
+            print("No se pudo establecer la conexión")
+            return False
+            
+        cur = conn.cursor()
+        # Verificar si el usuario ya existe
+        cur.execute("SELECT nombre FROM usuarios WHERE nombre = %s", (nombre,))
+        if cur.fetchone() is not None:
+            print("El usuario ya existe")
+            return False
+            
+        sql = "INSERT INTO usuarios (nombre, contraseña) VALUES (%s, %s)"
+        cur.execute(sql, (nombre, contraseña))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error al crear usuario: {str(e)}")
+        return False
+    finally:
+        if conn:
+            if 'cur' in locals():
+                cur.close()
+            conn.close()
+
+def get_all_records(nombre, contrasena):
+    conn = None
+    try:
+        conn = get_connection()
+        if conn is None:
+            return None
+            
         cur = conn.cursor()
         sql = "SELECT * FROM usuarios WHERE nombre = %s AND contraseña = %s"
         cur.execute(sql, (nombre, contrasena))
         records = cur.fetchall()
-        cur.close()
-        conn.close()
         return records
-    except Error as e:
-        print(f"Error: {e}")
+    except Exception as e:
+        print(f"Error: {str(e)}")
         return None
-
-def create_user(nombre, contraseña):
-    try:
-        conn = get_connection()
-        cur = conn.cursor()
-        sql = "INSERT INTO usuarios (nombre, contraseña) VALUES (%s, %s)"
-        cur.execute(sql, (nombre, contraseña))
-        conn.commit()
-        cur.close()
-        conn.close()
-        return True
-    except Error as e:
-        print(f"Error: {e}")
-        return False
+    finally:
+        if conn:
+            if 'cur' in locals():
+                cur.close()
+            conn.close()
 
 def get_generic_all_records(tabla):
+    conn = None
     try:
         conn = get_connection()
+        if conn is None:
+            return None
+            
         cur = conn.cursor()
         sql = f"SELECT * FROM {tabla}"
         cur.execute(sql)
         records = cur.fetchall()
-        cur.close()
-        conn.close()
         return records
-    except Error as e:
-        print(f"Error: {e}")
+    except Exception as e:
+        print(f"Error: {str(e)}")
         return None
+    finally:
+        if conn:
+            if 'cur' in locals():
+                cur.close()
+            conn.close()
 
 def create_orders(fecha, cantidad, id_producto, id_usuario, comprobante, precio_total):
+    conn = None
     try:
         conn = get_connection()
+        if conn is None:
+            return False
+            
         cur = conn.cursor()
         sql = """
         INSERT INTO eventos (fecha, cantidad, id_producto, id_usuario, comprobante, precio_total) 
@@ -68,9 +98,12 @@ def create_orders(fecha, cantidad, id_producto, id_usuario, comprobante, precio_
         """
         cur.execute(sql, (fecha, cantidad, id_producto, id_usuario, comprobante, precio_total))
         conn.commit()
-        cur.close()
-        conn.close()
         return True
-    except Error as e:
-        print(f"Error: {e}")
+    except Exception as e:
+        print(f"Error: {str(e)}")
         return False
+    finally:
+        if conn:
+            if 'cur' in locals():
+                cur.close()
+            conn.close()
