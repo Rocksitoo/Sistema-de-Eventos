@@ -7,8 +7,13 @@ load_dotenv()
 
 def get_connection():
     try:
-        DATABASE_URL = "postgresql://neondb_owner:Elpd7ckHA1PM@ep-royal-wave-a51nzno1.us-east-2.aws.neon.tech/neondb?sslmode=require"
-        conn = psycopg2.connect(DATABASE_URL)
+        conn = psycopg2.connect(
+            dbname="eventos_vkue",
+            user="eventos_vkue_user",
+            password="pa7v3fUvzDVMhMOI5f5vqGrptezz9KGd",
+            host="dpg-cskhh63tq21c73dot5b0-a.oregon-postgres.render.com",
+            port="5432"
+        )
         return conn
     except Exception as e:
         print(f"Error de conexión: {str(e)}")
